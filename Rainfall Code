@@ -1,0 +1,459 @@
+import javax.swing.*;
+import java.io.*;
+import java.text.DecimalFormat;
+/**
+ * PDMGT
+ * Author: Rakshit Sharma
+ * Date: May 27, 2019
+ * Description: This program displays the data inside a file that talks about the average rainfall in Toronto
+ */
+public class Rainfall {
+  
+  //Method to search a String array for month
+  public static int findMonth (String monthToFind, String array[]) {
+    //Create variable if not found
+    int loc = -1;
+    
+    //loop through array
+    for (int i = 0; i < array.length; i++) {
+      //Check if month to find is equal to current array element
+      if (monthToFind.equalsIgnoreCase(array[i]) == true) {
+        loc = i;
+        return loc;
+      }
+    }
+    return loc;
+  }
+  
+  //Method to find the information from the file
+  public static String getMonth (String monthToFind) throws IOException {
+    //Create a percent format
+    DecimalFormat percentF = new DecimalFormat("0.00%");
+    
+    //File reader
+    BufferedReader input = new BufferedReader(new FileReader("rainfall.txt"));
+    
+    //Declare variable for a flexible array
+    int line;
+    line = flexableArray();
+    
+    //Declare 3 arrays
+    String month [];
+    double precip [], percent[];
+    
+    //Declare variable for total precip, sum, and info
+    double precipTotal = 0, sum = 0;
+    String info;
+    
+    //Create the arrays
+    month = new String [line];
+    precip = new double [line];
+    percent = new double [line];
+    
+    //Load the information into the arrays
+    for (int i = 0; i < precip.length; i++) {
+      //Load months and precipitation to the arrays
+      month [i] = input.readLine();
+      precip[i] = Double.parseDouble(input.readLine());
+      
+      //Calculate the total precipitation
+      precipTotal = precipTotal + precip[i];
+      
+      //Calculate the sum 
+      sum = sum + precip[i];
+    }
+    
+    //Set the percentage array
+    for (int i = 0; i < precip.length; i++) {
+      percent [i] = (precip[i] / precipTotal);
+    }
+    
+    int loc = findMonth(monthToFind, month);
+    
+    //Get information that will be displayed
+    if (loc >= 0) info = month[loc] + " had a total percipitation of " + precip[loc] + "mm" + "\nAnd rained " + percentF.format(percent[loc]) + " of the year!";
+    else info = monthToFind + " not found!";
+    input.close();
+    return info;
+  }
+  
+  //Method to sort the months
+  public static String sortPercent () throws IOException {
+    //Create a decimal format
+    DecimalFormat percentF = new DecimalFormat("0.00%");
+    DecimalFormat twoDecimals = new DecimalFormat("0.00");
+    
+    //Setup to read from a file
+    FileReader fileR = new FileReader("rainfall.txt");
+    BufferedReader input = new BufferedReader(fileR);
+    
+    //Declare variable for a flexible array
+    int line;
+    line = flexableArray();
+    
+    //Declare variables
+    String info = "";
+    double precipTotal = 0;
+    
+    //Declare and create 3 arrays
+    String month [] = new String [line];
+    double precip[] = new double [line];
+    double percent[] = new double [line];
+    
+    //Declare variables for average and sum
+    double average, sum = 0;
+    
+    //Loop to read from file
+    for (int i = 0; i < precip.length; i++) {
+      //Load months and precipitation to the arrays
+      month [i] = input.readLine();
+      precip[i] = Double.parseDouble(input.readLine());
+      
+      //Calculate the total precipitation
+      precipTotal = precipTotal + precip[i];
+      
+      //Calculate the sum 
+      sum = sum + precip[i];
+    }
+    
+    //Set the percentage array
+    for (int i = 0; i < precip.length; i++) {
+      percent [i] = (precip[i] / precipTotal);
+    }
+    
+    //Close the file
+    fileR.close();
+    
+    //Sort data to descending order
+    for (int i = 0; i < month.length; i++) {
+      for (int j = i + 1; j < month.length; j++) {
+        if (percent[i] < percent[j]) {
+          double tempPercent = percent[i];
+          percent[i] = percent[j];
+          percent[j] = tempPercent;
+          String tempMonth = month[i];
+          month[i] = month[j];
+          month[j] = tempMonth;
+          double tempPrecip = precip[i];
+          precip[i] = precip[j];
+          precip[j] = tempPrecip;
+        }
+      }
+    }
+    
+    //Display adds array elements to string list
+    for (int i = 0; i < precip.length; i++) {
+      info = info + month [i] + "\t" + precip[i] + "\t" + "\t" + percentF.format(percent[i]) + "\n"; 
+    }
+    
+    //Calculate average
+    average = sum / precip.length;
+    
+    info = info + "The average precipitation is: " + twoDecimals.format(average) + "mm                                                      ";
+    
+    return info;
+  }
+  
+  //Function to create a flexible array
+  public static int flexableArray()throws IOException {
+    BufferedReader lineCheck = new BufferedReader(new FileReader("rainfall.txt"));
+    int lines = 0;
+    while (lineCheck.readLine() != null) lines++;
+    lineCheck.close();
+    lines = lines / 2;
+    return lines;
+  }
+  
+  //Method to update file information
+  public static void fileUpdate (String month[], double precip [], double percent[], DecimalFormat percentFormat) throws IOException{
+    //Prompt user to find the month they would like to edit
+    String find = JOptionPane.showInputDialog(null, "Please enter a month to update its information");
+    
+    //Create index to find position of information
+    int index = findMonth(find, month);
+    double totalPrecip = 0;
+    
+    //Check month entered
+    if (index < 0) {
+      JOptionPane.showMessageDialog(null,"Month not found");
+    }
+    
+    else if (index > 0) {
+      precip[index] = Double.parseDouble(JOptionPane.showInputDialog(null,"Enter updated precipitation of " + find));
+      
+      //Set total 
+      for (int i = 0; i < precip.length; i++) {
+        totalPrecip = totalPrecip + precip[i];
+      }
+      
+      percent[index] = precip[index] / totalPrecip;
+    }
+    
+    //Prompt user to name file
+    String fileName = JOptionPane.showInputDialog(null,"Enter the name of the file you would like to save as");
+    
+    //Create text files
+    FileWriter file = new FileWriter(fileName + ".txt");
+    PrintWriter output = new PrintWriter(file);
+    
+    //Setup output
+    output.println("Month            Precipitation(mm)           % Of Total\n");
+    output.println("=====              ===============         ==========\n");
+    
+    for (int i = 0; i < precip.length; i++) {
+      output.println(month[i] + "                     " + precip[i] + "                 " + percentFormat.format(percent[i])); 
+    }
+    
+    //close files
+    output.close();
+    
+  }
+  
+  //Method to create 2 files that will sort the months and data based on the percentage
+  public static void lowHigh (String month[], double precip [], double percent[], DecimalFormat percentFormat) throws IOException{
+    //Create text files
+    FileWriter file = new FileWriter("LOWPERCENT.txt");
+    PrintWriter output = new PrintWriter(file);
+    FileWriter file2 = new FileWriter("HIGHPERCENT.txt");
+    PrintWriter output2 = new PrintWriter(file2);
+    
+    //set the two outputs
+    output.println("Month            Precipitation(mm)           % Of Total\n");
+    output.println("=====              ===============         ==========\n");
+    output2.println("Month            Precipitation(mm)           % Of Total\n");
+    output2.println("=====              ===============         ==========\n");
+    
+    //prints for low percent
+    for (int i = 0; i < precip.length; i++) {
+      if (percent[i] < 0.09) {
+        output.println(month[i] + "                     " + precip[i] + "                 " + percentFormat.format(percent[i])); 
+      }
+    }
+    
+    //prints for high percent
+    for (int i = 0; i < precip.length; i++) {
+      if (percent[i] > 0.09) {
+        output2.println(month[i] + "                     " + precip[i] + "                 " + percentFormat.format(percent[i])); 
+      }
+    }
+    
+    //closes files
+    output.close();
+    output2.close();
+    
+    //Display a message
+    JOptionPane.showMessageDialog(null,"Files have been saved as LOWPERCENT.txt and HIGHPERCENT.txt");
+  }
+  
+  //Method to sort the months
+  public static String sortAlpha () throws IOException {
+    //Create a decimal format
+    DecimalFormat percentF = new DecimalFormat("0.00%");
+    DecimalFormat twoDecimals = new DecimalFormat("0.00");
+    
+    //Setup to read from a file
+    FileReader fileR = new FileReader("rainfall.txt");
+    BufferedReader input = new BufferedReader(fileR);
+    
+    //Declare variable for a flexible array
+    int line;
+    line = flexableArray();
+    
+    //Declare variables
+    String info = "";
+    double precipTotal = 0;
+    
+    //Declare and create 3 arrays
+    String month [] = new String [line];
+    double precip[] = new double [line];
+    double percent[] = new double [line];
+    
+    //Declare variables for average and sum
+    double average, sum = 0;
+    
+    //Loop to read from file
+    for (int i = 0; i < precip.length; i++) {
+      //Load months and precipitation to the arrays
+      month [i] = input.readLine();
+      precip[i] = Double.parseDouble(input.readLine());
+      
+      //Calculate the total precipitation
+      precipTotal = precipTotal + precip[i];
+      
+      //Calculate the sum 
+      sum = sum + precip[i];
+    }
+    
+    //Set the percentage array
+    for (int i = 0; i < precip.length; i++) {
+      percent [i] = (precip[i] / precipTotal);
+    }
+    
+    //Close the file
+    fileR.close();
+    
+    //Sort data to descending order
+    for (int i = 0; i < month.length; i++) {
+      for (int j = i + 1; j < month.length; j++) {
+        if (month[i].compareTo(month[j])>0) {
+          double tempPercent = percent[i];
+          percent[i] = percent[j];
+          percent[j] = tempPercent;
+          String tempMonth = month[i];
+          month[i] = month[j];
+          month[j] = tempMonth;
+          double tempPrecip = precip[i];
+          precip[i] = precip[j];
+          precip[j] = tempPrecip;
+        }
+      }
+    }
+    
+    //Display adds array elements to string list
+    for (int i = 0; i < precip.length; i++) {
+      info = info + month [i] + "\t" + precip[i] + "\t" + "\t" + percentF.format(percent[i]) + "\n"; 
+    }
+    
+    //Calculate average
+    average = sum / precip.length;
+    
+    info = info + "The average precipitation is: " + twoDecimals.format(average) + "mm                                                      ";
+    
+    return info;
+  }
+  
+  /**
+   * Main Method
+   */
+  public static void main(String[] args) throws IOException{ 
+    //Create a decimal format
+    DecimalFormat percentF = new DecimalFormat("0.00%");
+    DecimalFormat twoDecimals = new DecimalFormat("0.00");
+    
+    //Set up an error trapping for file name
+    try {
+      //Decleare a variable for the file name and ask user to input a file name to read from
+      String fileName;
+      fileName = JOptionPane.showInputDialog(null, "Please enter a file name", "rainfall.txt.");
+      
+      //Set up file to read from
+      FileReader fileR = new FileReader (fileName);
+      BufferedReader input = new BufferedReader (fileR);
+      
+      //Declare variable for a flexible array
+      int line;
+      line = flexableArray();
+      
+      //Declare variables
+      String month [];
+      double precip [], percent[], average, sum = 0, precipTotal = 0;
+      
+      //Create the arrays
+      month = new String [line];
+      precip = new double [line];
+      percent = new double [line];
+      
+      //Loop to read from file
+      for (int i = 0; i < precip.length; i++) {
+        //Load months and precipitation to the arrays
+        month [i] = input.readLine();
+        precip[i] = Double.parseDouble(input.readLine());
+        
+        //Calculate the total precipitation
+        precipTotal = precipTotal + precip[i];
+        
+        //Calculate the sum 
+        sum = sum + precip[i];
+      }
+      
+      //Set the percentage array
+      for (int i = 0; i < precip.length; i++) {
+        percent [i] = (precip[i] / precipTotal);
+      }
+      
+      //Close file
+      input.close();
+      
+      //Calculate average
+      average = sum / precip.length;
+      
+      //Setup the output
+      JTextArea outputArea = new JTextArea();
+      String list = "Month\tPrecipitation(mm)\t% Of Total\n";
+      list = list + "=====\t=============\t==========\n";
+      
+      //Set the list to display the months and precipitation
+      for (int i = 0; i < precip.length; i++) {
+        list = list + month [i] + "\t" + precip[i] + "\t" + "\t" + percentF.format(percent[i]) + "\n"; 
+      }
+      
+      //Add the average
+      list = list + "The average precipitation is: " + twoDecimals.format(average) + "mm";
+      
+      //Display information
+      outputArea.setText(list);
+      JOptionPane.showMessageDialog(null, outputArea);
+      
+      //Prompt user to enter a month to name and display all related information
+      String monthToFind = JOptionPane.showInputDialog(null, "Please enter a month to find");
+      
+      //Call function to find the name and display if found or not
+      String info = getMonth(monthToFind);
+      JOptionPane.showMessageDialog(null, info);
+      
+      //Show message that will tell the user the data will now be displayed in descending order
+      JOptionPane.showMessageDialog(null, "The data will now be displayed in descending order (percentage)");
+      
+      //Create new list to display
+      list = "";
+      list = "Month\tPrecipitation(mm)\t% Of Total\n";
+      list = list + "=====\t=============\t==========\n";
+      
+      //Declare a sort variable and call for sort function
+      String sort = sortPercent();
+      
+      //Create the list with all of the names sorted
+      list = list + sort; 
+      
+      outputArea.setText(list);
+      outputArea.setEditable(false);
+      JOptionPane.showMessageDialog(null, outputArea); //Display the file information
+
+      //Call method to allow user to update the information of a month
+      fileUpdate(month, precip, percent, percentF);
+      
+      //Inform user that two files will be created that will sort the months percipitation
+      JOptionPane.showMessageDialog(null, "Now creating two files that will place the months with less than 9% precipitation or greater than 9% precipitation");
+      
+      //Call method
+      lowHigh(month, precip, percent, percentF);
+      
+      //Show message that will tell the user the data will now be displayed in ascending alphabetical order
+      JOptionPane.showMessageDialog(null, "The data will now be displayed in ascending alphabetical order");
+      
+      //Create new list to display
+      list = "";
+      list = "Month\tPrecipitation(mm)\t% Of Total\n";
+      list = list + "=====\t=============\t==========\n";
+      
+      //Declare a sort variable and call for sort function
+      sort = sortAlpha();
+      
+      //Create the list with all of the names sorted
+      list = list + sort; 
+      
+      outputArea.setText(list);
+      outputArea.setEditable(false);
+      JOptionPane.showMessageDialog(null, outputArea); //Display the file information
+      
+    }
+    //Error message if wrong file name inputed
+    catch (FileNotFoundException error) {
+      JOptionPane.showMessageDialog(null, "Invalid File Name!");
+    }
+    //Error message if file is corrupt
+    catch (Exception error) {
+      JOptionPane.showMessageDialog(null, "Corrupt File!");
+    }
+  }
+}
